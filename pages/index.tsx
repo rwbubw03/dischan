@@ -14,7 +14,7 @@ export default function Home() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Discord マッチング掲示板</h1>
+      <h1 className="text-2xl font-bold mb-6">でぃすこーどちゃんねる</h1>
       <Link href="/post" className="bg-green-500 text-white px-4 py-2 rounded mb-6 inline-block">
         投稿する
       </Link>
