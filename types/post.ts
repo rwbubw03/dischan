@@ -6,4 +6,6 @@ export interface Post {
   comment: string;
   location: string;
   gender: Gender;
+  timestamp: number; // 投稿日時（Unixタイムスタンプ）
+  password: string; // 削除用パスワード
 }
