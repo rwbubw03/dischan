@@ -12,20 +12,17 @@ export default function Home() {
   const [postToDelete, setPostToDelete] = useState<Post | null>(null);
 
   useEffect(() => {
-    const postsRef = ref(database, 'posts');
-    onValue(postsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const postsArray = Object.entries(data).map(([key, value]) => ({
-          ...value as Post,
-          id: key
-        }));
-        const sortedPosts = postsArray.sort((a, b) => b.timestamp - a.timestamp);
-        setPosts(sortedPosts);
-      } else {
-        setPosts([]);
+    const fetchPosts = async () => {
+      try {
+        const response = await fetch('/api/posts');
+        const data = await response.json();
+        setPosts(Object.values(data));
+      } catch (error) {
+        console.error('投稿の取得に失敗しました:', error);
       }
-    });
+    };
+
+    fetchPosts();
   }, []);
 
   const handleDelete = async (post: Post) => {

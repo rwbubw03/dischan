@@ -20,35 +20,29 @@ export default function PostPage() {
   // フォーム送信時の処理
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     try {
-      // 新しい投稿オブジェクトの作成
-      const newPost: Post = {
-        id: '', // Firebaseが自動的にIDを生成
-        discordId,
-        comment,
-        location,
-        gender,
-        timestamp: Date.now(),
-        password, // パスワードを追加
-      };
+      const response = await fetch('/api/create-post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          discordId,
+          comment,
+          location,
+          gender,
+        }),
+      });
 
-      // Firebaseデータベースに投稿を保存
-      const postsRef = ref(database, 'posts');
-      await push(postsRef, newPost);
+      if (!response.ok) {
+        throw new Error('投稿の作成に失敗しました');
+      }
 
-      // フォームをリセット
-      setDiscordId('');
-      setComment('');
-      setLocation('');
-      setGender('male');
-      setPassword('');
-
-      // トップページにリダイレクト
       router.push('/');
     } catch (error) {
-      console.error('投稿の保存に失敗しました:', error);
-      alert('投稿の保存に失敗しました。もう一度お試しください。');
+      console.error('エラー:', error);
+      alert('投稿の作成に失敗しました');
     }
   };
 
