@@ -38,17 +38,23 @@ export default function Home() {
   }, []);
 
   const handleDelete = async (postId: string) => {
+    const password = prompt('削除用パスワードを入力してください');
+    if (!password) {
+      return;
+    }
+
     try {
       const response = await fetch('/api/delete-post', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ postId }),
+        body: JSON.stringify({ postId, password }),
       });
 
       if (!response.ok) {
-        throw new Error('投稿の削除に失敗しました');
+        const data = await response.json();
+        throw new Error(data.error || '投稿の削除に失敗しました');
       }
 
       // 投稿一覧を更新
@@ -56,6 +62,7 @@ export default function Home() {
       setPosts(updatedPosts);
     } catch (error) {
       console.error('エラー:', error);
+      alert(error instanceof Error ? error.message : '投稿の削除に失敗しました');
     }
   };
 
