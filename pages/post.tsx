@@ -32,6 +32,8 @@ export default function PostPage() {
           comment,
           location,
           gender,
+          password,
+          timestamp: Date.now()
         }),
       });
 
