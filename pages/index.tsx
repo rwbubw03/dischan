@@ -3,13 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { PostCard } from '../components/postCard';
 import { Post } from '../types/post';
 import Link from 'next/link';
-import { database } from '../lib/firebase';
-import { ref, onValue, remove } from 'firebase/database';
 
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
-  const [deletePassword, setDeletePassword] = useState('');
-  const [postToDelete, setPostToDelete] = useState<Post | null>(null);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -25,26 +21,25 @@ export default function Home() {
     fetchPosts();
   }, []);
 
-  const handleDelete = async (post: Post) => {
-    setPostToDelete(post);
-  };
+  const handleDelete = async (postId: string) => {
+    try {
+      const response = await fetch('/api/delete-post', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ postId }),
+      });
 
-  const confirmDelete = async () => {
-    if (!postToDelete) return;
-
-    if (deletePassword === postToDelete.password) {
-      try {
-        const postRef = ref(database, `posts/${postToDelete.id}`);
-        await remove(postRef);
-        setPostToDelete(null);
-        setDeletePassword('');
-        alert('投稿を削除しました');
-      } catch (error) {
-        console.error('削除に失敗しました:', error);
-        alert('削除に失敗しました');
+      if (!response.ok) {
+        throw new Error('投稿の削除に失敗しました');
       }
-    } else {
-      alert('パスワードが間違っています');
+
+      // 投稿一覧を更新
+      const updatedPosts = posts.filter(post => post.id !== postId);
+      setPosts(updatedPosts);
+    } catch (error) {
+      console.error('エラー:', error);
     }
   };
 
@@ -62,43 +57,11 @@ export default function Home() {
             <PostCard
               key={post.id}
               post={post}
-              onDelete={() => handleDelete(post)}
+              onDelete={() => handleDelete(post.id)}
             />
           ))
         )}
       </div>
-
-      {/* 削除確認モーダル */}
-      {postToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg">
-            <input
-              type="password"
-              value={deletePassword}
-              onChange={(e) => setDeletePassword(e.target.value)}
-              className="w-full border p-2 rounded mb-4"
-              placeholder="削除用パスワード"
-            />
-            <div className="flex justify-end gap-4">
-              <button
-                onClick={() => {
-                  setPostToDelete(null);
-                  setDeletePassword('');
-                }}
-                className="bg-gray-500 text-white px-4 py-2 rounded"
-              >
-                キャンセル
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="bg-red-500 text-white px-4 py-2 rounded"
-              >
-                削除
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
