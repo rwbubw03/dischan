@@ -11,10 +11,26 @@ export default function Home() {
     const fetchPosts = async () => {
       try {
         const response = await fetch('/api/posts');
+        if (!response.ok) {
+          throw new Error('投稿の取得に失敗しました');
+        }
         const data = await response.json();
-        setPosts(Object.values(data));
+        if (!data || typeof data !== 'object') {
+          throw new Error('無効なデータ形式です');
+        }
+        const postsArray = Object.values(data).filter((post): post is Post => {
+          return (
+            typeof post === 'object' &&
+            post !== null &&
+            'id' in post &&
+            'discordId' in post &&
+            'gender' in post
+          );
+        });
+        setPosts(postsArray);
       } catch (error) {
         console.error('投稿の取得に失敗しました:', error);
+        setPosts([]);
       }
     };
 
