@@ -3,9 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { PostCard } from '../components/postCard';
 import { Post } from '../types/post';
 import Link from 'next/link';
+import { PasswordModal } from '../components/PasswordModal';
 
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -37,11 +40,18 @@ export default function Home() {
     fetchPosts();
   }, []);
 
-  const handleDelete = async (postId: string) => {
-    const password = prompt('削除用パスワードを入力してください');
-    if (!password) {
-      return;
-    }
+  const handleDeleteClick = (postId: string) => {
+    setSelectedPostId(postId);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedPostId(null);
+  };
+
+  const handleDelete = async (password: string) => {
+    if (!selectedPostId) return;
 
     try {
       const response = await fetch('/api/delete-post', {
@@ -49,7 +59,7 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ postId, password }),
+        body: JSON.stringify({ postId: selectedPostId, password }),
       });
 
       if (!response.ok) {
@@ -58,8 +68,10 @@ export default function Home() {
       }
 
       // 投稿一覧を更新
-      const updatedPosts = posts.filter(post => post.id !== postId);
+      const updatedPosts = posts.filter(post => post.id !== selectedPostId);
       setPosts(updatedPosts);
+      setIsModalOpen(false);
+      setSelectedPostId(null);
     } catch (error) {
       console.error('エラー:', error);
       alert(error instanceof Error ? error.message : '投稿の削除に失敗しました');
@@ -80,11 +92,16 @@ export default function Home() {
             <PostCard
               key={post.id}
               post={post}
-              onDelete={() => handleDelete(post.id)}
+              onDelete={() => handleDeleteClick(post.id)}
             />
           ))
         )}
       </div>
+      <PasswordModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        onSubmit={handleDelete}
+      />
     </div>
   );
 }
