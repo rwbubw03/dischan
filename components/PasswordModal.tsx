@@ -3,17 +3,18 @@ import React, { useState } from 'react';
 interface PasswordModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (password: string) => void;
+  onSubmit: (password: string, postId: string) => void;
+  postId: string;
 }
 
-export function PasswordModal({ isOpen, onClose, onSubmit }: PasswordModalProps) {
+export function PasswordModal({ isOpen, onClose, onSubmit, postId }: PasswordModalProps) {
   const [password, setPassword] = useState('');
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(password);
+    onSubmit(password, postId);
     setPassword('');
   };
 

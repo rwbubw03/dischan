@@ -50,39 +50,31 @@ export default function Home() {
     setSelectedPostId(null);
   };
 
-  const handleDelete = async (password: string) => {
-    if (!selectedPostId) {
-      console.error('削除対象の投稿IDが設定されていません');
-      return;
-    }
-
-    console.log('削除処理開始:', { postId: selectedPostId });
-
+  const handleDelete = async (postId: string, password: string) => {
     try {
+      console.log('削除リクエスト:', { postId, password });
+      
       const response = await fetch('/api/delete-post', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ postId: selectedPostId, password }),
+        body: JSON.stringify({ postId, password }),
       });
 
-      console.log('APIレスポンス:', response.status);
+      const data = await response.json();
+      console.log('APIレスポンス:', { status: response.status, data });
 
       if (!response.ok) {
-        const data = await response.json();
-        console.error('APIエラー:', data);
         throw new Error(data.error || '投稿の削除に失敗しました');
       }
 
-      // 投稿一覧を更新
-      const updatedPosts = posts.filter(post => post.id !== selectedPostId);
-      console.log('更新後の投稿一覧:', updatedPosts);
+      // 削除成功後、投稿一覧を更新
+      const updatedPosts = posts.filter(post => post.id !== postId);
       setPosts(updatedPosts);
       setIsModalOpen(false);
-      setSelectedPostId(null);
     } catch (error) {
-      console.error('削除処理エラー:', error);
+      console.error('削除エラー:', error);
       alert(error instanceof Error ? error.message : '投稿の削除に失敗しました');
     }
   };
@@ -110,6 +102,7 @@ export default function Home() {
         isOpen={isModalOpen}
         onClose={handleModalClose}
         onSubmit={handleDelete}
+        postId={selectedPostId || ''}
       />
     </div>
   );

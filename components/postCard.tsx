@@ -4,7 +4,7 @@ import React from 'react';
 
 interface PostCardProps {
   post: Post;
-  onDelete: () => void;
+  onDelete: (postId: string) => void;
 }
 
 export function PostCard({ post, onDelete }: PostCardProps) {
@@ -20,7 +20,7 @@ export function PostCard({ post, onDelete }: PostCardProps) {
           {post.comment && <div>コメント: {post.comment}</div>}
         </div>
         <button
-          onClick={onDelete}
+          onClick={() => onDelete(post.id)}
           className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition-colors"
         >
           削除
