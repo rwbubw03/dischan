@@ -3,54 +3,35 @@ import React, { useState } from 'react';
 interface PasswordModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (password: string, postId: string) => void;
-  postId: string;
+  onDelete: (firebaseKey: string, password: string) => void;
+  firebaseKey: string;
 }
 
-export function PasswordModal({ isOpen, onClose, onSubmit, postId }: PasswordModalProps) {
+export function PasswordModal({ isOpen, onClose, onDelete, firebaseKey }: PasswordModalProps) {
   const [password, setPassword] = useState('');
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(password, postId);
-    setPassword('');
-  };
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-        <h2 className="text-xl font-bold mb-4">削除用パスワード</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              パスワードを入力してください
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full border p-2 rounded"
-              required
-            />
-          </div>
-          <div className="flex justify-end space-x-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800"
-            >
-              キャンセル
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-            >
-              削除
-            </button>
-          </div>
-        </form>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+      <div className="bg-white p-4 rounded w-80">
+        <h2 className="font-bold mb-2">削除用パスワード</h2>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full border p-2 mb-2"
+          placeholder="パスワードを入力"
+        />
+        <div className="flex justify-end gap-2">
+          <button onClick={onClose} className="px-3 py-1 text-gray-600">キャンセル</button>
+          <button 
+            onClick={() => onDelete(firebaseKey, password)} 
+            className="px-3 py-1 bg-red-500 text-white rounded"
+          >
+            削除
+          </button>
+        </div>
       </div>
     </div>
   );

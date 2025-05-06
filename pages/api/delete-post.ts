@@ -8,50 +8,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).end();
   }
 
-  const { postId, password } = req.body;
-  if (!postId || !password) {
+  const { firebaseKey, password } = req.body;
+  if (!firebaseKey || !password) {
     return res.status(400).json({ error: '投稿IDとパスワードは必須です' });
   }
 
   try {
     // 投稿の存在確認
-    const postsRef = ref(database, 'posts');
-    const postsSnapshot = await get(postsRef);
-    const posts = postsSnapshot.val() || {};
+    const postRef = ref(database, `posts/${firebaseKey}`);
+    const postSnapshot = await get(postRef);
+    const post = postSnapshot.val();
 
-    console.log('投稿一覧:', posts);
-    console.log('検索対象の投稿ID:', postId);
-
-    // 投稿を検索
-    let targetPost: Post | null = null;
-    let targetPostKey: string | null = null;
-
-    for (const [key, post] of Object.entries(posts)) {
-      if (post && typeof post === 'object' && 'id' in post) {
-        console.log('検索中の投稿:', { key, post });
-        if (post.id === postId) {
-          targetPost = post as Post;
-          targetPostKey = key;
-          break;
-        }
-      }
-    }
-
-    if (!targetPost) {
+    if (!post) {
       console.error('投稿が見つかりませんでした');
       return res.status(404).json({ error: '投稿が見つかりません' });
     }
 
-    console.log('見つかった投稿:', targetPost);
+    console.log('見つかった投稿:', post);
 
-    if (targetPost.password !== password) {
+    if (post.password !== password) {
+      console.error('パスワードが間違っています');
       return res.status(403).json({ error: 'パスワードが間違っています' });
     }
 
     // 投稿を削除
-    await remove(ref(database, `posts/${targetPostKey}`));
+      await remove(postRef);
     return res.status(200).json({ message: '投稿を削除しました' });
-  } catch (error) {
+    } catch (error) {
     console.error('削除エラー:', error);
     return res.status(500).json({ error: '投稿の削除に失敗しました' });
   }

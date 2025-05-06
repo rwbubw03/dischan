@@ -8,28 +8,21 @@ import { PasswordModal } from '../components/PasswordModal';
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [selectedPostId, setSelectedPostId] = useState<string>('');
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
         const response = await fetch('/api/posts');
-        if (!response.ok) {
-          throw new Error('投稿の取得に失敗しました');
-        }
         const data = await response.json();
-        if (!data || typeof data !== 'object') {
-          throw new Error('無効なデータ形式です');
-        }
-        const postsArray = Object.values(data).filter((post): post is Post => {
-          return (
-            typeof post === 'object' &&
-            post !== null &&
-            'id' in post &&
-            'discordId' in post &&
-            'gender' in post
-          );
-        });
+
+        // Firebaseのキーを保持したまま投稿一覧を設定
+        const postsArray = Object.entries(data).map(([key, post]) => ({
+          ...post as Post,
+          firebaseKey: key // Firebaseのキーを追加
+        }));
+
+        console.log('フィルタリング後の投稿一覧:', postsArray);
         setPosts(postsArray);
       } catch (error) {
         console.error('投稿の取得に失敗しました:', error);
@@ -47,30 +40,26 @@ export default function Home() {
 
   const handleModalClose = () => {
     setIsModalOpen(false);
-    setSelectedPostId(null);
+    setSelectedPostId('');
   };
 
-  const handleDelete = async (postId: string, password: string) => {
+  const handleDelete = async (firebaseKey: string, password: string) => {
     try {
-      console.log('削除リクエスト:', { postId, password });
-      
       const response = await fetch('/api/delete-post', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ postId, password }),
+        body: JSON.stringify({ firebaseKey, password }),
       });
 
       const data = await response.json();
-      console.log('APIレスポンス:', { status: response.status, data });
 
       if (!response.ok) {
         throw new Error(data.error || '投稿の削除に失敗しました');
       }
 
-      // 削除成功後、投稿一覧を更新
-      const updatedPosts = posts.filter(post => post.id !== postId);
+      const updatedPosts = posts.filter(post => post.firebaseKey !== firebaseKey);
       setPosts(updatedPosts);
       setIsModalOpen(false);
     } catch (error) {
@@ -81,28 +70,38 @@ export default function Home() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">でぃすこーどちゃんねる</h1>
-      <Link href="/post" className="bg-green-500 text-white px-4 py-2 rounded mb-6 inline-block">
-        投稿する
-      </Link>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">でぃすこーどちゃんねる</h1>
+        <div className="space-x-4">
+          <Link href="/" className="text-blue-500 hover:text-blue-700">
+            一覧
+          </Link>
+          <Link href="/post" className="text-blue-500 hover:text-blue-700">
+            投稿
+          </Link>
+        </div>
+      </div>
       <div className="mt-6">
         {posts.length === 0 ? (
           <div>まだ投稿がありません。</div>
         ) : (
-          posts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              onDelete={() => handleDeleteClick(post.id)}
-            />
-          ))
+          posts
+            .slice()
+            .sort((a, b) => b.timestamp - a.timestamp)
+            .map((post) => (
+              <PostCard
+                key={post.firebaseKey}
+                post={post}
+                onDelete={() => handleDeleteClick(post.firebaseKey)}
+              />
+            ))
         )}
       </div>
       <PasswordModal
         isOpen={isModalOpen}
         onClose={handleModalClose}
-        onSubmit={handleDelete}
-        postId={selectedPostId || ''}
+        onDelete={handleDelete}
+        firebaseKey={selectedPostId}
       />
     </div>
   );

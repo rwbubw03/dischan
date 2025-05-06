@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { Post, Gender } from '../types/post';
 import { ref, push } from 'firebase/database';
 import { database } from '../lib/firebase';
+import Link from 'next/link';
 
 export default function PostPage() {
   // ルーターの初期化（ページ遷移に使用）
@@ -51,7 +52,17 @@ export default function PostPage() {
   // フォームのレンダリング
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">新規投稿</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">でぃすこーどちゃんねる</h1>
+        <div className="space-x-4">
+          <Link href="/" className="text-blue-500 hover:text-blue-700">
+            一覧
+          </Link>
+          <Link href="/post" className="text-blue-500 hover:text-blue-700">
+            投稿
+          </Link>
+        </div>
+      </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Discord ID入力フィールド */}
         <div>
